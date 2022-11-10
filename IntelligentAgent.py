@@ -1,5 +1,7 @@
 import random
 from BaseAI import BaseAI
+import time
+import numpy as np
 class IntelligentAgent(BaseAI):
 
     def __init__(self):
@@ -7,18 +9,39 @@ class IntelligentAgent(BaseAI):
 
     def getMove(self, grid):
     # Selects a random move and returns it
-        moveset = self.maximize(grid, 0, float('-inf'), float('inf'))[0][0]
+        #start = time.time()
+        moveset = self.maximize(grid, 0, float('-inf'), float('inf'))[0]
         return moveset
 
     def heuristic(self, grid):
-        return len(grid.getAvailableCells())
+        #snake
+        grid_copy = grid.clone()
+        grid_copy = grid_copy.map
+        matrix = []
+
+
+        weights = [[4 ** 15, 4 **  14, 4 **  13, 4 **  12], [4 ** 8, 4 ** 9, 4 ** 10, 4 ** 11], [4 ** 7, 4 ** 6, 4 ** 5, 4 ** 4], [4 ** 0, 4 ** 1, 4 ** 2, 4 ** 3]]
+        weighted_grid = [[0, 0, 0, 0],
+                  [0, 0, 0, 0],
+                  [0, 0, 0, 0],
+                  [0, 0, 0, 0]]
+        sum = 0
+
+        for i in range(4):
+            # iterating by column by B
+            for j in range(4):
+                sum += (weights[i][j] * grid_copy[i][j])
+
+
+
+        return sum
 
     #computer's move
     def minimize(self, grid, depth, alpha, beta):
         if self.terminal_test(grid):
             return (None, self.heuristic(grid)) #heuristic == number of empty cells
 
-        if depth >= 4:
+        if depth >= 3:
             #print("here")
             return (None, self.heuristic(grid))
 
@@ -50,16 +73,17 @@ class IntelligentAgent(BaseAI):
         if not grid.getAvailableMoves():
             return (None, self.heuristic(grid))
 
-        if depth >= 4:
+        if depth >= 3:
             return (None, self.heuristic(grid))
 
         (max_child, max_utility) = (None, float('-inf'))
 
+        #TODO: change naming
         for cell in grid.getAvailableMoves():
-            utility = self.minimize(grid, depth + 1, alpha, beta)[1]
+            utility = self.minimize(cell[1], depth + 1, alpha, beta)[1]
 
             if utility > max_utility:
-                (max_child, max_utility) = (cell, utility)
+                (max_child, max_utility) = (cell[0], utility)
 
             if max_utility >= beta:
                 break
@@ -72,7 +96,8 @@ class IntelligentAgent(BaseAI):
 
 
     def terminal_test(self, grid):
-        if not(grid.canMove()) or grid.getMaxTile() >= 2048:
+        if not(grid.canMove()):
+            #or grid.getMaxTile() >= 2048
             return True
         else:
             return False
